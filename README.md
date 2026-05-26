@@ -1,4 +1,5 @@
 <<<<<<< HEAD
+<<<<<<< HEAD
 # Finance-Manager-
 =======
 # Finance Track
@@ -41,3 +42,6 @@ A sophisticated, full-stack personal finance application built with React and Fi
 - `/transactions/{id}`: Individual income/expense records.
 - `/budgets/{id}`: Monthly category limits.
 >>>>>>> 094edbc (initial commit)
+=======
+# finance-Manager-
+>>>>>>> 9649a261b65e4e8cd0f041a753890947cbee0675
