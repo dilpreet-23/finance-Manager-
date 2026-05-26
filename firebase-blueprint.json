@@ -1,0 +1,60 @@
+{
+  "entities": {
+    "UserProfile": {
+      "title": "User Profile",
+      "description": "Stores user-specific settings and private information.",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string", "description": "The unique Firebase Auth UID." },
+        "email": { "type": "string", "format": "email", "description": "User's email address." },
+        "displayName": { "type": "string", "description": "User's display name." },
+        "photoURL": { "type": "string", "description": "User's profile photo URL." },
+        "preferredCurrencies": { "type": "array", "items": { "type": "string" }, "description": "User's preferred currency codes." },
+        "createdAt": { "type": "string", "format": "date-time", "description": "When the profile was created." }
+      },
+      "required": ["uid", "email"]
+    },
+    "Transaction": {
+      "title": "Transaction",
+      "description": "Represents an income or expense entry.",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string", "description": "The UID of the user who owns this transaction." },
+        "type": { "type": "string", "enum": ["income", "expense"], "description": "Type of transaction." },
+        "category": { "type": "string", "description": "Category (e.g., Food, Salary, Rent)." },
+        "amount": { "type": "number", "description": "The monetary value." },
+        "currency": { "type": "string", "enum": ["USD", "INR", "EUR"], "description": "The currency code." },
+        "date": { "type": "string", "format": "date-time", "description": "When the transaction occurred." },
+        "note": { "type": "string", "description": "Optional note for the transaction." },
+        "createdAt": { "type": "string", "format": "date-time", "description": "When the record was created." }
+      },
+      "required": ["uid", "type", "category", "amount", "date"]
+    },
+    "Budget": {
+      "title": "Budget",
+      "description": "Monthly budget limit for a specific category.",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string", "description": "The UID of the user." },
+        "category": { "type": "string", "description": "Category for the budget." },
+        "limit": { "type": "number", "description": "The maximum spending limit." },
+        "month": { "type": "string", "description": "The month in YYYY-MM format." }
+      },
+      "required": ["uid", "category", "limit", "month"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": "UserProfile",
+      "description": "User private profile documents."
+    },
+    "/transactions/{transactionId}": {
+      "schema": "Transaction",
+      "description": "Collection of all user transactions."
+    },
+    "/budgets/{budgetId}": {
+      "schema": "Budget",
+      "description": "Collection of user budget limits."
+    }
+  }
+}

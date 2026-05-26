@@ -1,0 +1,138 @@
+// ===============================================================
+// Assumed Data Model
+// ===============================================================
+//
+// Collection: users
+// Document ID: {userId}
+// Fields:
+//   - uid: string (required) - The unique Firebase Auth UID.
+//   - email: string (required) - User's email address.
+//   - displayName: string (optional) - User's display name.
+//   - photoURL: string (optional) - User's profile photo URL.
+//   - monthlyBudget: number (optional) - Monthly budget limit.
+//   - budgetCurrency: string (optional) - Currency for the budget.
+//   - createdAt: string (optional) - When the profile was created.
+//
+// Collection: transactions
+// Document ID: {transactionId}
+// Fields:
+//   - uid: string (required) - The UID of the user who owns this transaction.
+//   - type: string (required, enum: ["income", "expense"]) - Type of transaction.
+//   - category: string (required) - Category (e.g., Food, Salary, Rent).
+//   - amount: number (required, positive) - The monetary value.
+//   - date: string (required, ISO 8601) - When the transaction occurred.
+//   - note: string (optional) - Optional note for the transaction.
+//   - createdAt: string (optional) - When the record was created.
+//
+// Collection: budgets
+// Document ID: {budgetId}
+// Fields:
+//   - uid: string (required) - The UID of the user.
+//   - category: string (required) - Category for the budget.
+//   - limit: number (required, positive) - The maximum spending limit.
+//   - month: string (required, YYYY-MM) - The month in YYYY-MM format.
+//
+// ===============================================================
+
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ===============================================================
+    // Helper Functions
+    // ===============================================================
+    
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    function isDocOwner() {
+      return isAuthenticated() && request.auth.uid == resource.data.uid;
+    }
+
+    function isAdmin() {
+      return isAuthenticated() &&
+        (get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin' ||
+          (request.auth.token.email == "2305dilpreet@gmail.com" && request.auth.token.email_verified == true));
+    }
+
+    function isValidEmail(email) {
+      return email is string && email.matches("^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$");
+    }
+
+    function isValidDateString(dateStr) {
+      return dateStr is string && dateStr.matches("^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}.*Z?$");
+    }
+
+    function isValidMonthString(monthStr) {
+      return monthStr is string && monthStr.matches("^\\d{4}-\\d{2}$");
+    }
+
+    // ===============================================================
+    // Domain Validators
+    // ===============================================================
+
+    function isValidUser(data) {
+      return data.uid == request.auth.uid &&
+             isValidEmail(data.email) &&
+             (data.get('displayName', '') is string) &&
+             (data.get('photoURL', '') is string) &&
+             (!('monthlyBudget' in data) || data.monthlyBudget == null || data.monthlyBudget is number) &&
+             (!('budgetCurrency' in data) || data.budgetCurrency is string);
+    }
+
+    function isValidTransaction(data) {
+      return data.keys().hasAll(['uid', 'type', 'category', 'amount', 'date']) &&
+             data.uid == request.auth.uid &&
+             data.type in ['income', 'expense'] &&
+             data.category is string && data.category.size() > 0 && data.category.size() < 50 &&
+             data.amount is number && data.amount > 0 &&
+             isValidDateString(data.date);
+    }
+
+    function isValidBudget(data) {
+      return data.keys().hasAll(['uid', 'category', 'limit', 'month']) &&
+             data.uid == request.auth.uid &&
+             data.category is string && data.category.size() > 0 && data.category.size() < 50 &&
+             data.limit is number && data.limit > 0 &&
+             isValidMonthString(data.month);
+    }
+
+    // ===============================================================
+    // Rules
+    // ===============================================================
+
+    match /users/{userId} {
+      allow read: if isOwner(userId) || isAdmin();
+      allow create: if isOwner(userId) && isValidUser(request.resource.data);
+      allow update: if isOwner(userId) && isValidUser(request.resource.data) && 
+                    request.resource.data.uid == resource.data.uid;
+      allow delete: if isAdmin();
+    }
+
+    match /transactions/{transactionId} {
+      allow read: if isAuthenticated() && (resource.data.uid == request.auth.uid || isAdmin());
+      allow create: if isAuthenticated() && isValidTransaction(request.resource.data);
+      allow update: if isAuthenticated() && isDocOwner() && isValidTransaction(request.resource.data) &&
+                    request.resource.data.uid == resource.data.uid;
+      allow delete: if isAuthenticated() && (isDocOwner() || isAdmin());
+    }
+
+    match /budgets/{budgetId} {
+      allow read: if isAuthenticated() && (resource.data.uid == request.auth.uid || isAdmin());
+      allow create: if isAuthenticated() && isValidBudget(request.resource.data);
+      allow update: if isAuthenticated() && isDocOwner() && isValidBudget(request.resource.data) &&
+                    request.resource.data.uid == resource.data.uid;
+      allow delete: if isAuthenticated() && (isDocOwner() || isAdmin());
+    }
+
+    // Default deny
+    match /{path=**} {
+      allow read, write: if false;
+    }
+  }
+}
