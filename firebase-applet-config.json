@@ -1,10 +1,4 @@
 {
-  "projectId": "ai-studio-applet-webapp-9724d",
-  "appId": "1:872862059051:web:e6645642dbb0ad0150786e",
-  "apiKey": "AIzaSyCWZernelRgN0HoeRu8wkL0IlWUjLC0z7A",
-  "authDomain": "ai-studio-applet-webapp-9724d.firebaseapp.com",
-  "firestoreDatabaseId": "ai-studio-20f8f741-b377-42b2-ab4a-472cec6e58e5",
-  "storageBucket": "ai-studio-applet-webapp-9724d.firebasestorage.app",
-  "messagingSenderId": "872862059051",
-  "measurementId": ""
+// put your firebase applet configuration detail here for the running of the 
+  firebase database
 }
