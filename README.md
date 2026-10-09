@@ -1,5 +1,5 @@
 
-# 🚀FinanceTrack - AI Powered Personal Finance Tracker 
+# 🚀FinanceTrack - AI Powered Personal Finance Tracker
 A sophisticated, full-stack personal finance application built with React and Firebase.
 
 
